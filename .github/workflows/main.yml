@@ -16,15 +16,24 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build with Gradle
+      - name: Find and Build
         run: |
-          # هذا السطر سيقوم بمنح الصلاحيات وتشغيل البناء تلقائياً
-          chmod +x android/gradlew
-          cd android && ./gradlew assembleDebug
+          # البحث عن ملف gradlew وإعطاؤه صلاحية التنفيذ
+          GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew not found!"
+            exit 1
+          fi
+          chmod +x "$GRADLEW_PATH"
+          
+          # الانتقال للمجلد الذي يحتوي على gradlew والبدء بالبناء
+          cd $(dirname "$GRADLEW_PATH")
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: "**/*.apk"
+
 
